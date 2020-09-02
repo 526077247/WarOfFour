@@ -1,0 +1,5 @@
+﻿{
+  "SvrID": "GameMgeSvr",
+  "IntfName": "WarOfFour.Service.IGameMgeSvr",
+  "IntfAssembly": "WarOfFour.Service"
+}

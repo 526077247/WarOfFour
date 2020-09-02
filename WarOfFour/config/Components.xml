@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <components>
+    <!--<component type="service.core.CacheManager, service.core" service="service.core.ICacheManager, service.core"/>-->
+    
+    
+   
+    <!--认证服务-->
+    <component id="AuthSvr"  type="WarOfFour.Service.AuthSvr, WarOfFour.Service" service="WarOfFour.Service.IAuthSvr, WarOfFour.Service"/>
+    <!--匹配服务-->
+    <component id="MatchingGameSvr"  type="WarOfFour.Service.MatchingGameSvr, WarOfFour.Service" service="WarOfFour.Service.IMatchingGameSvr, WarOfFour.Service"/>
+    <!--对局管理服务-->
+    <component id="GameMgeSvr"  type="WarOfFour.Service.GameMgeSvr, WarOfFour.Service" service="WarOfFour.Service.IGameMgeSvr, WarOfFour.Service"/>
+    <!--登录服务-->
+    <component id="LoginMgeSvr" type="service.core.ProxyService, service.core" service="service.core.IProxyService, service.core">
+      <parameters>
+        <service>WarOfFour.Service.ILoginMgeSvr, WarOfFour.Service</service>
+        <url>http://account.mayuntao.xyz/Service/LoginMgeSvr.assx</url>
+      </parameters>
+    </component>
+
+
+    <!--客户端接口-->
+    <!--登录服务-->
+    <component id="LoginCallBack" type="service.core.ProxyClientService, service.core" service="service.core.IProxyService, service.core">
+      <parameters>
+        <service>WarOfFour.Service.ILoginCallBack, WarOfFour.Service</service>
+        <serviceName>LoginCallBack</serviceName>
+      </parameters>
+    </component>
+    <!--游戏服务-->
+    <component id="GameCallBack" type="service.core.ProxyClientService, service.core" service="service.core.IProxyService, service.core">
+      <parameters>
+        <service>WarOfFour.Service.IGameCallBack, WarOfFour.Service</service>
+        <serviceName>GameCallBack</serviceName>
+      </parameters>
+    </component>
+  </components>
+</configuration>

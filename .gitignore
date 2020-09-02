@@ -1,0 +1,27 @@
+node_modules/
+#Common useless files
+*.zip
+*.jar
+*.exe
+
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+x64/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+*/web/obj/
+*/web/bin/
+
+Debug/ 
+Release/ 
+obj/
+/.vs/
+log/
+
+source/UI/Innocellence\.Web/App_Data/Logs/
+.vs/
+dist/
+

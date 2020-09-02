@@ -1,0 +1,5 @@
+﻿{
+  "SvrID": "AuthSvr",
+  "IntfName": "WarOfFour.Service.IAuthSvr",
+  "IntfAssembly": "WarOfFour.Service"
+}

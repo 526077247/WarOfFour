@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+
+<sqlMap
+	namespace="WarOfFour.Service"
+	xmlns="http://ibatis.apache.org/mapping"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <alias>
+    <typeAlias alias="Game" assembly="WarOfFour.Service.dll" type="WarOfFour.Service.Game, WarOfFour.Service" />
+  </alias>
+
+  <resultMaps>
+    <resultMap id="GameResult" class="Game">
+      <result property="Id" column="Id" />
+      <result property="StartTime" column="StartTime" />
+      <result property="EndTime" column="EndTime" />
+      <result property="State" column="State" />
+      <result property="East.JsonText" column="East" />
+      <result property="South.JsonText" column="South" />
+      <result property="West.JsonText" column="West" />
+      <result property="North.JsonText" column="North" />
+      <result property="Winner" column="Winner" />
+    </resultMap>
+  </resultMaps>
+
+  <parameterMaps>
+    <parameterMap id="GameParams" class="Game">
+      <parameter property="Id" column="Id" />
+      <parameter property="StartTime" column="StartTime" />
+      <parameter property="EndTime" column="EndTime" />
+      <parameter property="State" column="State" />
+      <parameter property="East.JsonText" column="East" />
+      <parameter property="South.JsonText" column="South" />
+      <parameter property="West.JsonText" column="West" />
+      <parameter property="North.JsonText" column="North" />
+      <parameter property="Winner" column="Winner" />
+    </parameterMap>
+
+    <parameterMap id="UpdateGameParams" extends="GameParams" class="Game">
+      <parameter property="Id" column="Id" />
+    </parameterMap>
+  </parameterMaps>
+
+  <statements>
+    <sql id="DynamicGameWhere">
+      <dynamic prepend="WHERE" >
+        <isNotEmpty prepend="AND" property="Id" >
+          Id = #Id#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="StartTime" >
+          StartTime = #StartTime#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="EndTime" >
+          EndTime = #EndTime#
+        </isNotEmpty>
+        <isNotEmpty prepend="AND" property="State" >
+          State = #State#
+        </isNotEmpty>
+      </dynamic>
+    </sql>
+
+    <sql id="DynamicGameOrder">
+      <dynamic prepend="Order By" >
+        <isNotEmpty prepend="Order By" property="_OrderBy">
+          <isEqual compareValue="StartTime" property="_OrderBy">
+            StartTime
+          </isEqual>
+          <isEqual compareValue="StartTime_D" property="_OrderBy">
+            StartTime desc
+          </isEqual>
+          <isEqual compareValue="EndTime" property="_OrderBy">
+            EndTime
+          </isEqual>
+          <isEqual compareValue="EndTime_D" property="_OrderBy">
+            EndTime desc
+          </isEqual>
+        </isNotEmpty>
+      </dynamic>
+    </sql>
+
+    <select id="GetGameCount"  resultClass="int">
+      SELECT count(*)
+      FROM Game;
+    </select>
+
+    <select id="GetGame"  parameterClass="Game" resultMap="GameResult">
+      SELECT *
+      FROM Game
+      WHERE (Id = #Id#) ;
+    </select>
+
+    <select id="GetGameByPara"  parameterClass="Game" resultMap="GameResult">
+      SELECT *
+      FROM Game
+      <include refid="DynamicGameWhere"></include>
+    </select>
+
+    <select id="GetGameList" parameterClass="string" resultMap="GameResult">
+      SELECT *
+      FROM Game
+      <include refid="DynamicGameOrder"></include>
+    </select>
+
+    <select id="QueryGameCount" parameterClass="Hashtable" resultClass="int">
+      SELECT count(*)
+      FROM Game
+      <include refid="DynamicGameWhere"></include>
+    </select>
+
+    <select id="QueryGameList" parameterClass="Hashtable" resultMap="GameResult">
+      SELECT *
+      FROM Game
+      <include refid="DynamicGameWhere"></include>
+      <include refid="DynamicGameOrder"></include>
+    </select>
+
+    <insert id="InsertGame" parameterMap="GameParams">
+      <generate table="Game" />
+    </insert>
+
+    <delete id="DeleteGame" parameterClass="Game">
+      DELETE FROM Game WHERE (Id = #Id#) ;
+    </delete>
+
+    <update id="UpdateGame" parameterMap="UpdateGameParams">
+      UPDATE Game SET
+      Id = ?,
+      StartTime = ?,
+      EndTime = ?,
+      State = ?,
+      East = ?,
+      South = ?,
+      West = ?,
+      North = ?
+      WHERE Id = ?;
+    </update>
+
+  </statements>
+
+</sqlMap>

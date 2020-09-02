@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Maps\Game.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Maps\Game.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\service.core\Service.Core.csproj" />
+  </ItemGroup>
+
+</Project>
