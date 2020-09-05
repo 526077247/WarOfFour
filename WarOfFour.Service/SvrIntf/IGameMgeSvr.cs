@@ -13,7 +13,12 @@ namespace WarOfFour.Service
         /// <param name="token"></param>
         [PublishMethod]
         void ReadyGame(string token);
-
+        /// <summary>
+        /// 取消对局
+        /// </summary>
+        /// <param name="token"></param>
+        [PublishMethod]
+        void CancelGame(string token);
         /// <summary>
         /// 同步玩家信息
         /// </summary>

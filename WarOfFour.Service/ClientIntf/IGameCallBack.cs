@@ -14,6 +14,11 @@ namespace WarOfFour.Service
         /// <param name="gameInfo"></param>
         void MatchGame(List<string> tokens, Game gameInfo);
         /// <summary>
+        /// 匹配游戏失败
+        /// </summary>
+        /// <param name="tokens"></param>
+        void MatchGameFail(List<string> tokens);
+        /// <summary>
         /// 同步游戏
         /// </summary>
         /// <param name="tokens"></param>

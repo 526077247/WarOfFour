@@ -64,7 +64,27 @@ namespace WarOfFour.Service
                 (sender, e) => { _GameCallBack.GameSynchronization(game.Tokens, game); },//同步游戏数据到客户端
                 () => { GameOver(game); });//游戏结束回调方法
         }
-
+        /// <summary>
+        /// 取消对局
+        /// </summary>
+        /// <param name="token"></param>
+        public void CancelGame(string token)
+        {
+            string userName = _AuthSvr.GetUserName(token);
+            if (!userGame.ContainsKey(userName))
+            {
+                return;
+            }
+            Game game = userGame[userName];
+            games.Remove(game);
+            var tokens = game.Tokens;
+            foreach (var item in tokens)
+            {
+                userGame.TryRemove(item, out _);
+            }
+            tokens.Remove(token);
+            _GameCallBack.MatchGameFail(tokens);
+        }
         /// <summary>
         /// 同步玩家信息
         /// </summary>
@@ -83,7 +103,7 @@ namespace WarOfFour.Service
 
             realplayer.transform = player.transform;
             realplayer.Speed = player.Speed;
-
+            
         }
         /// <summary>
         /// 玩家攻击怪物
