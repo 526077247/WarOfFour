@@ -9,7 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace service.core
+namespace Service.SocketCore
 {
     /// <summary>
     /// log
@@ -31,9 +31,9 @@ namespace service.core
                 
                 if (repository == null)
                 {
-                    repository = log4net.LogManager.CreateRepository("CoreLogRepository");
+                    repository = log4net.LogManager.CreateRepository("SocketLogRepository");
                     Assembly assembly = Assembly.GetExecutingAssembly();
-                    using Stream stream = assembly.GetManifestResourceStream("Service.Core.Logger.log4net.config");
+                    using Stream stream = assembly.GetManifestResourceStream("Service.SocketCore.Logger.log4net.config");
                     XmlConfigurator.Configure(repository, stream);
 
                 }

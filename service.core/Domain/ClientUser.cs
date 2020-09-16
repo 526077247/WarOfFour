@@ -7,7 +7,7 @@ using System.Threading;
 using System.Net;
 using System.Net.Http.Headers;
 
-namespace service.core
+namespace Service.SocketCore
 {
     /// <summary>
     /// 客户端

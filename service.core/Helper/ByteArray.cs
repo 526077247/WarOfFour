@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace service.core
+namespace Service.SocketCore
 {
     /// <summary>
     /// 将数据写入成二进制

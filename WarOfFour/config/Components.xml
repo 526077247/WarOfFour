@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <configuration>
   <components>
-    <!--<component type="service.core.CacheManager, service.core" service="service.core.ICacheManager, service.core"/>-->
+    <!--<component type="Service.SocketCore.CacheManager, Service.SocketCore" service="Service.SocketCore.ICacheManager, Service.SocketCore"/>-->
     
     
    
@@ -12,7 +12,7 @@
     <!--对局管理服务-->
     <component id="GameMgeSvr"  type="WarOfFour.Service.GameMgeSvr, WarOfFour.Service" service="WarOfFour.Service.IGameMgeSvr, WarOfFour.Service"/>
     <!--登录服务-->
-    <component id="LoginMgeSvr" type="service.core.ProxyService, service.core" service="service.core.IProxyService, service.core">
+    <component id="LoginMgeSvr" type="Service.SocketCore.ProxyService, Service.SocketCore" service="Service.SocketCore.IProxyService, Service.SocketCore">
       <parameters>
         <service>WarOfFour.Service.ILoginMgeSvr, WarOfFour.Service</service>
         <url>http://account.mayuntao.xyz/Service/LoginMgeSvr.assx</url>
@@ -22,14 +22,14 @@
 
     <!--客户端接口-->
     <!--登录服务-->
-    <component id="LoginCallBack" type="service.core.ProxyClientService, service.core" service="service.core.IProxyService, service.core">
+    <component id="LoginCallBack" type="Service.SocketCore.ProxyClientService, Service.SocketCore" service="Service.SocketCore.IProxyService, Service.SocketCore">
       <parameters>
         <service>WarOfFour.Service.ILoginCallBack, WarOfFour.Service</service>
         <serviceName>LoginCallBack</serviceName>
       </parameters>
     </component>
     <!--游戏服务-->
-    <component id="GameCallBack" type="service.core.ProxyClientService, service.core" service="service.core.IProxyService, service.core">
+    <component id="GameCallBack" type="Service.SocketCore.ProxyClientService, Service.SocketCore" service="Service.SocketCore.IProxyService, Service.SocketCore">
       <parameters>
         <service>WarOfFour.Service.IGameCallBack, WarOfFour.Service</service>
         <serviceName>GameCallBack</serviceName>

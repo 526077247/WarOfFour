@@ -7,7 +7,7 @@ using IBatisNet.Common.Pagination;
 using IBatisNet.DataAccess.Interfaces;
 using IBatisNet.DataMapper;
 
-namespace service.core
+namespace Service.SocketCore
 {
     public class BaseDao : IDao
     {

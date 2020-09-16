@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ProtoBuf;
 
-namespace service.core
+namespace Service.SocketCore
 {
     
     public class StickyPackageHelper

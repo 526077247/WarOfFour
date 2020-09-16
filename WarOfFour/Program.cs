@@ -1,15 +1,22 @@
-﻿using service.core;
+﻿using Service.SocketCore;
 using System;
 using System.Threading;
 using WarOfFour.Service;
 using System.Collections;
+using System.Net;
+
 namespace WarOfFour
 {
     class Program
     {
         static void Main(string[] args)
         {
-            MainServer.Build("172.16.150.142", 2345).Start();
+            IPAddress[] ipAddress = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (var item in ipAddress)
+            {
+                Console.WriteLine(item.ToString());
+            }
+            MainServer.Build("172.16.150.166", 2346).Start();
             //IGameDao gameDao = (IGameDao)ServiceConfig.GetInstance().DaoManager.GetDao(typeof(IGameDao));
             //Console.WriteLine( gameDao.QueryCount(new Hashtable()));
             //Game game = new Game();

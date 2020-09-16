@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -10,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace service.core
+namespace Service.SocketCore
 {
     public class MainServer
     {
@@ -20,7 +21,7 @@ namespace service.core
         private int port;
 
         Socket acceptSocket;
-
+        public Action<string> LoginOutEvt;
         Dictionary<string, ClientUser> cSockets;
 
         Queue<SocketDataObject> handleEvts;
@@ -74,7 +75,17 @@ namespace service.core
             {
                 byte[] buffer = DataUtils.ObjectToBytes(obj);
                 byte[] bs = StickyPackageHelper.encode(buffer);
-                Parallel.ForEach(tokens, item => { cSockets[item].SendMsg(bs); });
+                Parallel.ForEach(tokens, item =>
+                {
+                    try
+                    {
+                        cSockets[item].SendMsg(bs);
+                    }
+                    catch
+                    {
+                        LoginOutEvt?.Invoke(item);
+                    }
+                });
             }
         }
 
@@ -85,6 +96,7 @@ namespace service.core
         internal void CloseLink(string id)
         {
             cSockets.Remove(id);
+            LoginOutEvt?.Invoke(id);
         }
 
 
@@ -123,6 +135,25 @@ namespace service.core
             }
         }
 
+        private void CheckBeats(object o)
+        {
+            while (true)
+            {
+                try
+                {
+                    var vs = cSockets.Keys.ToList();
+                    for (int i = 0; i < vs.Count; i++)
+                    {
+                        SendMsgToClient(new List<string> { vs[i] }, new SocketDataObject());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+                Thread.Sleep(10000);
+            }
+        }
         /// <summary>
         /// 处理请求线程
         /// </summary>

@@ -1,5 +1,5 @@
 ﻿using IBatisNet.DataAccess;
-using service.core;
+using Service.SocketCore;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

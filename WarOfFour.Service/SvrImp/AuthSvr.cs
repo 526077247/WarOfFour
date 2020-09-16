@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using service.core;
+using Service.SocketCore;
 namespace WarOfFour.Service
 {
     public delegate void ChangeUserToken(string userName,string newToken);

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
 
-namespace service.core
+namespace Service.SocketCore
 {
     public class MD5Helper
     {

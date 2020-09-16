@@ -5,7 +5,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace service.core
+namespace Service.SocketCore
 {
     public class DataUtils
     {

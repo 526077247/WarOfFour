@@ -2,15 +2,27 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>Service.Core</RootNamespace>
+    <RootNamespace>Service.SocketCore</RootNamespace>
+    <AssemblyName>Service.SocketCore</AssemblyName>
+    <PackageId>MytSocketService</PackageId>
+    <Authors>mayuntao</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Product>MytSocketService</Product>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Log\log4net.config" />
+    <Compile Remove="Log\**" />
+    <EmbeddedResource Remove="Log\**" />
+    <None Remove="Log\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Log\log4net.config" />
+    <None Remove="Logger\log4net.config" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Logger\log4net.config" />
   </ItemGroup>
 
   <ItemGroup>

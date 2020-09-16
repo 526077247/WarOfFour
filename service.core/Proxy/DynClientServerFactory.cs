@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace service.core
+namespace Service.SocketCore
 {
     public static class DynClientServerFactory
     {

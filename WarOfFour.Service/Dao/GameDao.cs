@@ -7,7 +7,7 @@
     <sqlMap embedded="WarOfFour.Service.Maps.Game.xml, WarOfFour.Service" />
 * * * * * * * * * * * * * * * * * * * * * * * */
 using IBatisNet.DataAccess.Interfaces;
-using service.core;
+using Service.SocketCore;
 using System;
 using System.Collections;
 using System.Collections.Generic;
