@@ -19,6 +19,7 @@ namespace WarOfFour.Service
         public string UserId { get; set; }//用户账号
         public Vector3 Speed { get; set; }//速度
         public int MaxHP { get; set; }//最大生命
+        public Transform Aim { get; set; }//准心位置
         public int HP
         {
             get { return hp; }

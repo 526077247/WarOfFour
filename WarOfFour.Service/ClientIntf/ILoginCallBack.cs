@@ -10,7 +10,7 @@ namespace WarOfFour.Service
         /// 登录成功
         /// </summary>
         /// <param name="tokens"></param>
-        void LoginSuccess(List<string> tokens);
+        void LoginSuccess(List<string> tokens,string token);
         /// <summary>
         /// 登录失败
         /// </summary>

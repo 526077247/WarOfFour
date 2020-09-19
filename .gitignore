@@ -15,6 +15,7 @@ bld/
 */web/obj/
 */web/bin/
 
+packages/
 Debug/ 
 Release/ 
 obj/

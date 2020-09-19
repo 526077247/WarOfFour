@@ -84,7 +84,7 @@ namespace Service.SocketCore
             catch(Exception ex)
             {
                 Close();
-                return 0;
+                throw ex;
             }
         }
     }

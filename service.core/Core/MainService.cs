@@ -55,20 +55,25 @@ namespace Service.SocketCore
         /// 启动
         /// </summary>
         /// <returns></returns>
-        public void Start()
+        public void Start(int backlog = 1000)
         {
             acceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPEndPoint point = new IPEndPoint(IPAddress.Parse(ipStr), port);
             acceptSocket.Bind(point);
 
-            acceptSocket.Listen(1000);
-            Console.WriteLine("按任意键结束");
+            acceptSocket.Listen(backlog);
+            Console.WriteLine("Socket server start,listening "+ ipStr+":"+ port);
 
             ThreadPool.QueueUserWorkItem(StartListen, acceptSocket);
             ThreadPool.QueueUserWorkItem(InvokeThread);
 
         }
 
+        /// <summary>
+        /// 发送信息到客户端
+        /// </summary>
+        /// <param name="tokens"></param>
+        /// <param name="obj"></param>
         public void SendMsgToClient(List<string> tokens,SocketDataObject obj)
         {
             if (tokens.Count > 0)
@@ -83,6 +88,7 @@ namespace Service.SocketCore
                     }
                     catch
                     {
+                        cSockets.Remove(item);
                         LoginOutEvt?.Invoke(item);
                     }
                 });
@@ -90,19 +96,30 @@ namespace Service.SocketCore
         }
 
         /// <summary>
+        /// 关闭客户端连接
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public bool CloseConnect(string token)
+        {
+            if (cSockets.ContainsKey(token))
+            {
+                cSockets[token].Close();
+            }
+            return true;
+        }
+
+        #region 私有方法
+        /// <summary>
         /// 移除客户端
         /// </summary>
         /// <param name="id"></param>
-        internal void CloseLink(string id)
+        internal void CloseLink(string token)
         {
-            cSockets.Remove(id);
-            LoginOutEvt?.Invoke(id);
+            cSockets.Remove(token);
+            LoginOutEvt?.Invoke(token);
         }
 
-
-        
-        #region 私有方法
-        
         /// <summary>
         /// 添加待处理请求
         /// </summary>
@@ -278,6 +295,10 @@ namespace Service.SocketCore
             if(!map.TryAdd("token", data.ClientId))
             {
                 map["token"] = data.ClientId;
+            }
+            if (!map.TryAdd("actionTime", data.Time))
+            {
+                map["actionTime"] = data.Time;
             }
             object obj = ServiceManager.GetService(serviceDefine.SvrID, intf);
             

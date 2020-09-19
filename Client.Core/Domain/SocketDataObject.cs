@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Service.SocketCore
+namespace Client.Core
 {
     [ProtoContract]
     public class SocketDataObject
@@ -16,6 +16,6 @@ namespace Service.SocketCore
         public string Paras { get; set; }
         [ProtoMember(4)]
         public string Time { get; set; }
-        public string ClientId { get; set; }
+
     }
 }

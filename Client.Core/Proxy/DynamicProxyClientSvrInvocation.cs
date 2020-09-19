@@ -4,8 +4,16 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
-namespace Service.SocketCore
+namespace Client.Core
 {
+    public static class StaticClass
+    {
+        public static string ToFormatString(this DateTime time)
+        {
+            return time.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+
+    }
     internal class DynamicProxyClientSvrInvocation : IInterceptor
     {
         private string serviceName;
@@ -22,40 +30,29 @@ namespace Service.SocketCore
             SocketDataObject socketDataObject = new SocketDataObject();
             socketDataObject.ServiceName = serviceName;
             socketDataObject.MethodName = invocation.Method.Name;
-            socketDataObject.Paras = GetpstData(invocation,out List<string> tokens);
+            socketDataObject.Paras = GetpstData(invocation);
             socketDataObject.Time = DateTime.Now.ToFormatString();
-            MainServer.Instance.SendMsgToClient(tokens, socketDataObject);
+            MainClient.Instance.SendMsgToServer(socketDataObject);
 
             invocation.ReturnValue = null;
         }
 
 
-        private string GetpstData(IInvocation invocation,out List<string> tokens)
+        private string GetpstData(IInvocation invocation)
         {
-            tokens = new List<string>();
             StringBuilder builder = new StringBuilder();
             var Parameters = invocation.Method.GetParameters();
             for (int i = 0; i < Parameters.Length; i++)
             {
-                if (Parameters[i].Name == "tokens")
-                {
-                    tokens = invocation.Arguments[i] as List<string>;
-                    continue;
-                }
-                if (Parameters[i].Name == "token")
-                {
-                    tokens.Add(invocation.Arguments[i] as string);
-                    continue;
-                }
                 string jStr = JsonConvert.SerializeObject(invocation.Arguments[i]);
-                if (jStr.StartsWith("{")|| jStr.StartsWith("["))
+                if (jStr.StartsWith("{") || jStr.StartsWith("["))
                     builder.Append(Parameters[i].Name + "=" + jStr + "&");
                 else
                     builder.Append(Parameters[i].Name + "=" + invocation.Arguments[i].ToString() + "&");
             }
             string result = builder.ToString();
             if (result.EndsWith("&"))
-                result = result[0..^1];
+                result = result.Substring(0,result.Length-1);
             return result;
         }
 

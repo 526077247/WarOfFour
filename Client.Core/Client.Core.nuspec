@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>MytClientCoreForUnity</id>
+    <version>1.0.1</version>
+    <title>MytClientCoreForUnity</title>
+    <authors>mayuntao</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <description>Unity客户端组件包</description>
+    <releaseNotes></releaseNotes>
+    <copyright>Copyright ©  2020</copyright>
+    <tags></tags>
+  </metadata>
+</package>
