@@ -9,19 +9,19 @@ namespace WarOfFour.Service
         /// <summary>
         /// 登录成功
         /// </summary>
-        /// <param name="tokens"></param>
-        void LoginSuccess(List<string> tokens,string token);
+        /// <param name="token"></param>
+        void LoginSuccess(string token, string userToken);
         /// <summary>
         /// 登录失败
         /// </summary>
-        /// <param name="tokens"></param>
+        /// <param name="token"></param>
         /// <param name="msg"></param>
-        void LoginFail(List<string> tokens,string msg);
+        void LoginFail(string token, string msg);
         /// <summary>
         /// 关闭连接
         /// </summary>
-        /// <param name="tokens"></param>
+        /// <param name="token"></param>
         /// <param name="msg"></param>
-        void CloseLink(List<string> tokens,string msg);
+        void CloseLink(string token, string msg);
     }
 }

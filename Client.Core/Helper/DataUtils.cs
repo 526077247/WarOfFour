@@ -74,5 +74,12 @@ namespace Client.Core
             }
         }
     }
+    public static class StaticClass
+    {
+        public static string ToFormatString(this DateTime time)
+        {
+            return time.ToString("yyyy-MM-dd HH:mm:ss");
+        }
 
+    }
 }

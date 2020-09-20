@@ -38,8 +38,9 @@ namespace Service.SocketCore
         public void ReciveMsg(object o)
         {
             Socket cSocket = o as Socket;
-            while (true&& cSocket != null)
+            while (cSocket != null)
             {
+                Thread.Sleep(1);
                 byte[] bs = new byte[5120];
                 int count;
                 try
@@ -48,6 +49,7 @@ namespace Service.SocketCore
                 }
                 catch (Exception ex)
                 {
+                    LogManager.GetLog("Client").Error("Client" + clientId + "Error:" + ex);
                     Close();
                     return;
                 }

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace WarOfFour.Service
 {
-    public class GameMgeSvr:IGameMgeSvr
+    public class GameMgeSvr:AppServiceBase,IGameMgeSvr
     {
         #region 服务描述
         List<Game> games;
@@ -51,7 +51,7 @@ namespace WarOfFour.Service
         /// <param name="token"></param>
         public void ReadyGame(string token)
         {
-            string userName = _AuthSvr.GetUserName(token);
+            string userName = _AuthSvr.GetUserId(token);
             if (!userGame.ContainsKey(userName))
             {
                 return;
@@ -70,20 +70,25 @@ namespace WarOfFour.Service
         /// <param name="token"></param>
         public void CancelGame(string token)
         {
-            string userName = _AuthSvr.GetUserName(token);
-            if (!userGame.ContainsKey(userName))
+            string userId = _AuthSvr.GetUserId(token);
+            if (!userGame.ContainsKey(userId))
             {
                 return;
             }
-            Game game = userGame[userName];
-            games.Remove(game);
-            var tokens = game.Tokens;
-            foreach (var item in tokens)
+            Game game = userGame[userId];
+            if (game.State == TYPE_OF_Game.Preparing)
             {
-                userGame.TryRemove(item, out _);
+                _logger.Debug("CancelGame:" + game.Id);
+                games.Remove(game);
+                var tokens = game.Tokens;
+                foreach (var item in tokens)
+                {
+                    userId = _AuthSvr.GetUserId(token);
+                    userGame.TryRemove(userId, out _);
+                }
+                tokens.Remove(token);
+                _GameCallBack.MatchGameFail(tokens);
             }
-            tokens.Remove(token);
-            _GameCallBack.MatchGameFail(tokens);
         }
         /// <summary>
         /// 同步玩家信息
@@ -92,7 +97,7 @@ namespace WarOfFour.Service
         /// <param name="player"></param>
         public void SetPlayerInfo(string token, Player player)
         {
-            string userName = _AuthSvr.GetUserName(token);
+            string userName = _AuthSvr.GetUserId(token);
             if (!userGame.ContainsKey(userName))
             {
                 return;
@@ -113,7 +118,7 @@ namespace WarOfFour.Service
         [PublishMethod]
         public void AttackMonster(string token, string monsterId)
         {
-            string userName = _AuthSvr.GetUserName(token);
+            string userName = _AuthSvr.GetUserId(token);
             if (!userGame.ContainsKey(userName))
             {
                 return;
@@ -136,7 +141,7 @@ namespace WarOfFour.Service
         [PublishMethod]
         public void MonsterAttackPlayer(string token, string monsterId)
         {
-            string userName = _AuthSvr.GetUserName(token);
+            string userName = _AuthSvr.GetUserId(token);
             if (!userGame.ContainsKey(userName))
             {
                 return;
@@ -164,7 +169,7 @@ namespace WarOfFour.Service
         [PublishMethod]
         public void AttackPlayer(string token, string playerId)
         {
-            string userName = _AuthSvr.GetUserName(token);
+            string userName = _AuthSvr.GetUserId(token);
             if (!userGame.ContainsKey(userName))
             {
                 return;
@@ -186,7 +191,7 @@ namespace WarOfFour.Service
         [PublishMethod]
         public void PlaySkillAnimation(string token, int type)
         {
-            string userName = _AuthSvr.GetUserName(token);
+            string userName = _AuthSvr.GetUserId(token);
             if (!userGame.ContainsKey(userName))
             {
                 return;
@@ -210,7 +215,10 @@ namespace WarOfFour.Service
             }
             return null;
         }
-
+        /// <summary>
+        /// 获取进行中游戏总数
+        /// </summary>
+        /// <returns></returns>
         public int GetGameCount()
         {
             return games.Count;

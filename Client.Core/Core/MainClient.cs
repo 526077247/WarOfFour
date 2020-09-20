@@ -1,5 +1,4 @@
-﻿using Castle.Core.Internal;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,12 +23,12 @@ namespace Client.Core
             o = new object();
             msg = new List<byte>();
             commands = new Queue<SocketDataObject>();
+            ThreadPool.SetMaxThreads(100, 100);
         }
         public void Start(string ip, int port)
         {
             clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             clientSocket.Connect(new IPEndPoint(IPAddress.Parse(ip), port));
-            ThreadPool.SetMaxThreads(100, 100);
             ThreadPool.QueueUserWorkItem(ReciveMsgThread);
 
         }
@@ -84,8 +83,9 @@ namespace Client.Core
         }
         private void ReciveMsgThread(object o)
         {
-            while (true && clientSocket != null)
+            while (clientSocket != null)
             {
+                Thread.Sleep(1);
                 byte[] bs = new byte[5120];
                 int count;
                 try
@@ -121,7 +121,7 @@ namespace Client.Core
 
         }
 
-        private void Close()
+        public void Close()
         {
             if (clientSocket != null)
             {
@@ -168,8 +168,16 @@ namespace Client.Core
                 throw new Exception("未找到方法" + method);
             else
             {
-                var attr = realmethod.GetAttribute<PublishMethodAttribute>();
-                if (attr == null)
+                bool flag = false;
+                var attrs = realmethod.GetCustomAttributes(true);
+                for (int i = 0; i < attrs.Length; i++)
+                {
+                    if(attrs[i] as PublishMethodAttribute != null)
+                    {
+                        flag = true;
+                    }
+                }
+                if (!flag)
                 {
                     throw new Exception( "服务未发布");
                 }
@@ -184,7 +192,7 @@ namespace Client.Core
                             objs[i] = ChangeValueToType(map[infos[i].Name], infos[i].ParameterType);
                         }
 
-                        else if (infos[i].HasDefaultValue())
+                        else if (infos[i].DefaultValue!=null)
                         {
                             objs[i] = infos[i].DefaultValue;
 

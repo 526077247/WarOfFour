@@ -25,23 +25,22 @@ namespace WarOfFour.Service
         public void LoginIn(string token, string userName, string psw)
         {
             var res = LoginMgeSvr.Login(userName, psw);
-            _logger.Debug("userName" + userName);
             if (string.IsNullOrEmpty(res.Token))
             {
-                LoginCallBack.LoginFail(new List<string>() { token }, "用户名密码不匹配");
+                LoginCallBack.LoginFail(token, "用户名密码不匹配");
             }
             else
             {
                 if (tokenUser.ContainsKey(token))
                 {
-                    LoginCallBack.LoginSuccess(new List<string>() { token }, token);
+                    LoginCallBack.LoginSuccess(token, token);
                     return;
                 }
                 tokenUser.Add(token, userName);
                 changeUserTokenEvt?.Invoke(userName, token);
                 if (userToken.ContainsKey(userName))//若已存在
                 {
-                    LoginCallBack.CloseLink(new List<string>() { userToken[userName] }, "账号在其他地方登陆");
+                    LoginCallBack.CloseLink(userToken[userName], "账号在其他地方登陆");
                     if (userToken.ContainsKey(userName))//再次确认是否在线
                     {
                         tokenUser.Remove(userToken[userName]);
@@ -56,7 +55,7 @@ namespace WarOfFour.Service
                 {
                     userToken.Add(userName, token);
                 }
-                LoginCallBack.LoginSuccess(new List<string>() { token },token);
+                LoginCallBack.LoginSuccess(token, token);
             }
         }
 
@@ -77,13 +76,13 @@ namespace WarOfFour.Service
             }
         }
 
-        public string GetUserName(string token)
+        public string GetUserId(string token)
         {
             if (tokenUser.TryGetValue(token, out string res))
             {
                 return res;
             }
-            LoginCallBack.CloseLink(new List<string>() { token }, "与服务器断开连接");
+            LoginCallBack.CloseLink(token, "与服务器断开连接");
             return null;
         }
         public string GetUserToken(string userName)
@@ -104,6 +103,12 @@ namespace WarOfFour.Service
         }
 
 
-
+        /// <summary>
+        /// 在线人数
+        /// </summary>
+        public int OnlineCount()
+        {
+            return tokenUser.Count;
+        }
     }
 }

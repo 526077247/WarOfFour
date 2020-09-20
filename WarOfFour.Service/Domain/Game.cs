@@ -9,6 +9,7 @@ namespace WarOfFour.Service
 {
     public enum TYPE_OF_Game
     {
+        Cancel=-1,
         Preparing,
         Underway,
         Over

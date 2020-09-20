@@ -74,14 +74,9 @@ namespace Service.SocketCore
 						{
 							domDaoManagerBuilder.ConfigureAndWatch(text, configureHandler);
 						}
-						catch (Exception ex2)
+						catch (Exception ex)
 						{
-							Exception ex = ex2;
-							while (ex.InnerException != null)
-							{
-								ex = ex.InnerException;
-							}
-							throw new Exception("dao.config不存在或错! " + ex2.Message, ex);
+							throw new Exception("dao.config不存在或错! " + ex.Message, ex);
 						}
 						_instance = new ServiceConfig
 						{

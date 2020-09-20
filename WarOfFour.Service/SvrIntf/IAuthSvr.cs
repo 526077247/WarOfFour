@@ -4,7 +4,7 @@ using System.Text;
 using Service.SocketCore;
 namespace WarOfFour.Service
 {
-    public interface IAuthSvr:IAppServiceBase
+    public interface IAuthSvr : IAppServiceBase
     {
         /// <summary>
         /// 认证
@@ -27,11 +27,17 @@ namespace WarOfFour.Service
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        string GetUserName(string token);
+        string GetUserId(string token);
+
+        string GetUserToken(string userName);
         /// <summary>
         /// 添加用户改变Token事件
         /// </summary>
         /// <param name="evt"></param>
         void AddChangeUserTokenEvent(ChangeUserToken evt);
+        /// <summary>
+        /// 在线人数
+        /// </summary>
+        int OnlineCount();
     }
 }

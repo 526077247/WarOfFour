@@ -1,7 +1,7 @@
-﻿using Castle.MicroKernel.Registration;
-using Castle.Windsor;
+﻿
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Client.Core
 {
@@ -9,10 +9,12 @@ namespace Client.Core
     {
         private static ServiceManager instance;
         private Dictionary<string, Type> serviceDefine;
-        private IWindsorContainer container ;
+        private Dictionary<Type,Dictionary<string,object>> map ;
+        private List<Dictionary<string, object>> containers;
         private ServiceManager()
         {
-            container = new WindsorContainer();
+            map = new Dictionary<Type, Dictionary<string, object>>();
+            containers = new List<Dictionary<string, object>>();
             serviceDefine = new Dictionary<string, Type>();
         }
         public static ServiceManager Instance
@@ -34,7 +36,15 @@ namespace Client.Core
         /// <returns></returns>
         public TService GetService<TService>() where TService : class
         {
-            return container.Resolve<TService>();
+            Type type = typeof(TService);
+            if (map.ContainsKey(type))
+            {
+                if (map[type].Count > 0)
+                {
+                    return map[type].Values.ToList()[0] as TService;
+                }
+            }
+            return null;
         }
         /// <summary>
         /// 取Service实例
@@ -44,7 +54,15 @@ namespace Client.Core
         /// <returns></returns>
         public TService GetService<TService>(string SvrID) where TService : class
         {
-            return container.Resolve<TService>(SvrID);
+            Type type = typeof(TService);
+            if (map.ContainsKey(type))
+            {
+                if (map[type].ContainsKey(SvrID))
+                {
+                    return map[type][SvrID] as TService;
+                }
+            }
+            return null;
         }
         /// <summary>
         /// 取Service实例
@@ -54,7 +72,14 @@ namespace Client.Core
         /// <returns></returns>
         public object GetService(string SvrID, Type serviceType)
         {
-            return container.Resolve(SvrID, serviceType);
+            if (map.ContainsKey(serviceType))
+            {
+                if (map[serviceType].ContainsKey(SvrID))
+                {
+                    return map[serviceType][SvrID];
+                }
+            }
+            return null;
         }
         /// <summary>
         /// 取Service实例
@@ -63,7 +88,14 @@ namespace Client.Core
         /// <returns></returns>
         public object GetService(Type serviceType)
         {
-            return container.Resolve(serviceType);
+            if (map.ContainsKey(serviceType))
+            {
+                if (map[serviceType].Count > 0)
+                {
+                    return map[serviceType].Values.ToList()[0];
+                }
+            }
+            return null;
         }
         /// <summary>
         /// 根据类名取类
@@ -87,12 +119,12 @@ namespace Client.Core
                 throw new Exception("name重复");
             }
             serviceDefine.Add(name, type);
-            container.Register(
-                  Component.For(type)
-                  .Instance(instance)
-                  .Named(name)
-                  .LifeStyle.Singleton
-               );
+            if (!map.ContainsKey(type))
+            {
+                var childmap = new Dictionary<string, object>();
+                map.Add(type, childmap);
+            }
+            map[type].Add(name, instance);
             return ;
         }
         /// <summary>
@@ -108,12 +140,13 @@ namespace Client.Core
                 throw new Exception("name重复");
             }
             serviceDefine.Add(name, interfaceType);
-            container.Register(
-                  Component.For(interfaceType)
-                  .ImplementedBy(classType)
-                  .Named(name)
-                  .LifeStyle.Singleton
-               );
+            if (!map.ContainsKey(interfaceType))
+            {
+                var childmap = new Dictionary<string, object>();
+                map.Add(interfaceType, childmap);
+            }
+            object obj = Activator.CreateInstance(classType);
+            map[interfaceType].Add(name, obj);
             return;
         }
         /// <summary>
@@ -129,12 +162,13 @@ namespace Client.Core
                 throw new Exception("name重复");
             }
             serviceDefine.Add(name, typeof(T));
-            container.Register(
-                  Component.For<T>()
-                  .Instance(instance)
-                  .Named(name)
-                  .LifeStyle.Singleton
-               );
+            Type type = typeof(T);
+            if (!map.ContainsKey(type))
+            {
+                var childmap = new Dictionary<string, object>();
+                map.Add(type, childmap);
+            }
+            map[type].Add(name, instance);
             return;
         }
     }

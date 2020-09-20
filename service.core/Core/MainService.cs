@@ -49,7 +49,7 @@ namespace Service.SocketCore
                 };
             }
             return instance;
-           
+
         }
         /// <summary>
         /// 启动
@@ -62,7 +62,7 @@ namespace Service.SocketCore
             acceptSocket.Bind(point);
 
             acceptSocket.Listen(backlog);
-            Console.WriteLine("Socket server start,listening "+ ipStr+":"+ port);
+            Console.WriteLine("Socket server start,listening " + ipStr + ":" + port);
 
             ThreadPool.QueueUserWorkItem(StartListen, acceptSocket);
             ThreadPool.QueueUserWorkItem(InvokeThread);
@@ -74,7 +74,7 @@ namespace Service.SocketCore
         /// </summary>
         /// <param name="tokens"></param>
         /// <param name="obj"></param>
-        public void SendMsgToClient(List<string> tokens,SocketDataObject obj)
+        public void SendMsgToClient(List<string> tokens, SocketDataObject obj)
         {
             if (tokens.Count > 0)
             {
@@ -136,9 +136,10 @@ namespace Service.SocketCore
         private void StartListen(object o)
         {
             Socket serverSocket = o as Socket;
-
+            Console.WriteLine("StartListenThread Work");
             while (true)
             {
+                Thread.Sleep(1);
                 try
                 {
                     Socket clientSocket = serverSocket.Accept();
@@ -148,6 +149,7 @@ namespace Service.SocketCore
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
+                    logger.Error(ex.ToString());
                 }
             }
         }
@@ -156,6 +158,7 @@ namespace Service.SocketCore
         {
             while (true)
             {
+                Thread.Sleep(1);
                 try
                 {
                     var vs = cSockets.Keys.ToList();
@@ -177,8 +180,10 @@ namespace Service.SocketCore
         /// <param name="o"></param>
         private void InvokeThread(object o)
         {
+            Console.WriteLine("InvokeThread Work");
             while (true)
             {
+                Thread.Sleep(1);
                 try
                 {
                     if (handleEvts.Count > 0)
@@ -205,7 +210,7 @@ namespace Service.SocketCore
         private void InvokeHandle(object o)
         {
             SocketDataObject data = o as SocketDataObject;
-            var path = Directory.GetParent("wwwroot/1").ToString()+"/"+ data.ServiceName + ".json";
+            var path = Directory.GetCurrentDirectory() + "/wwwroot/" + data.ServiceName + ".json";
             if (File.Exists(path))
             {
                 string jstr = File.ReadAllText(path);
@@ -220,8 +225,13 @@ namespace Service.SocketCore
                 }
                 else
                 {
-                    Console.WriteLine("接口未定义");
+                    logger.Error("接口未定义");
+                    throw new Exception("接口未定义");
                 }
+            }
+            else
+            {
+                logger.Error("路径错误：" + path);
             }
         }
 
@@ -232,7 +242,7 @@ namespace Service.SocketCore
         /// </summary>
         /// <param name="queryString"></param>
         /// <returns></returns>
-        private static Dictionary<string,string> GetQueryString(string queryString)
+        private static Dictionary<string, string> GetQueryString(string queryString)
         {
             queryString = queryString.Replace("?", "");
             Dictionary<string, string> result = new Dictionary<string, string>();
@@ -292,7 +302,7 @@ namespace Service.SocketCore
         private object GetServiceResult(SocketDataObject data, Type intf, ServiceDefine serviceDefine, string method)
         {
             Dictionary<string, string> map = GetQueryString(data.Paras);
-            if(!map.TryAdd("token", data.ClientId))
+            if (!map.TryAdd("token", data.ClientId))
             {
                 map["token"] = data.ClientId;
             }
@@ -301,7 +311,7 @@ namespace Service.SocketCore
                 map["actionTime"] = data.Time;
             }
             object obj = ServiceManager.GetService(serviceDefine.SvrID, intf);
-            
+
             if (obj == null)
             {
                 throw new ServiceException((int)TYPE_OF_RESULT_TYPE.failure, "服务未定义" + serviceDefine.SvrID);
@@ -335,10 +345,10 @@ namespace Service.SocketCore
                             objs[i] = ChangeValueToType(map[infos[i].Name], infos[i].ParameterType);
                         }
 
-                        else if(infos[i].HasDefaultValue)
+                        else if (infos[i].HasDefaultValue)
                         {
                             objs[i] = infos[i].DefaultValue;
-                            
+
                         }
                         else
                         {
@@ -350,9 +360,9 @@ namespace Service.SocketCore
                     {
                         try
                         {
-                            logger.Info($"Source:{cSockets[data.ClientId].Endpoint},Path:{data.ServiceName+"."+data.MethodName},Para:{JsonConvert.SerializeObject(objs)}");
+                            logger.Info($"Source:{cSockets[data.ClientId].Endpoint},Path:{data.ServiceName + "." + data.MethodName},Para:{JsonConvert.SerializeObject(objs)}");
                         }
-                        catch{}
+                        catch { }
                     }
                     try
                     {
