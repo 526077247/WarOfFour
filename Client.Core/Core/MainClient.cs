@@ -15,6 +15,7 @@ namespace Client.Core
         private static MainClient instance;
         Socket clientSocket;
         Thread recvThread;
+        internal static string version;
         List<byte> msg;
         object o;
         Queue<SocketDataObject> commands;
@@ -25,14 +26,22 @@ namespace Client.Core
             commands = new Queue<SocketDataObject>();
             ThreadPool.SetMaxThreads(100, 100);
         }
-        public void Start(string ip, int port)
+        public void Start(string ip, int port,string version ="")
         {
+            MainClient.version = version;
             clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             clientSocket.Connect(new IPEndPoint(IPAddress.Parse(ip), port));
             ThreadPool.QueueUserWorkItem(ReciveMsgThread);
 
         }
-
+        public bool IsConnect()
+        {
+            if (clientSocket == null)
+                return false;
+            if (clientSocket.Connected == false)
+                return false;
+            return true;
+        }
         public static MainClient Instance
         {
             get
@@ -59,6 +68,10 @@ namespace Client.Core
             }
             return null;
         }
+        /// <summary>
+        /// 通过消息调用方法
+        /// </summary>
+        /// <param name="data"></param>
         public void InvokeMsg(SocketDataObject data)
         {
             Type intf = ServiceManager.Instance.GetTypeDefine(data.ServiceName);
@@ -86,7 +99,7 @@ namespace Client.Core
             while (clientSocket != null)
             {
                 Thread.Sleep(1);
-                byte[] bs = new byte[5120];
+                byte[] bs = new byte[51200];
                 int count;
                 try
                 {
@@ -104,18 +117,16 @@ namespace Client.Core
                     {
                         msg.Add(bs[i]);
                     }
-                    byte[] real = StickyPackageHelper.decode(msg);
-                    if (real != null)
+                    byte[] real;
+                    do
                     {
-                        SocketDataObject obj = DataUtils.BytesToObject<SocketDataObject>(real);
-                        //if (obj != null)
-                        //{
-                        //    lock (o)
-                        //    {
-                        commands.Enqueue(obj);
-                        //    }
-                        //}
-                    }
+                        real = StickyPackageHelper.decode(msg);
+                        if (real != null)
+                        {
+                            SocketDataObject obj = DataUtils.BytesToObject<SocketDataObject>(real);
+                            commands.Enqueue(obj);
+                        }
+                    } while (real != null);
                 }
             }
 
@@ -126,10 +137,12 @@ namespace Client.Core
             if (clientSocket != null)
             {
                 clientSocket.Close();
+                clientSocket = null;
             }
             if (recvThread != null)
             {
                 recvThread.Abort();
+                recvThread = null;
             }
         }
 
@@ -148,6 +161,10 @@ namespace Client.Core
                 map["actionTime"] = data.Time;
             else
                 map.Add("actionTime", data.Time);
+            if (map.ContainsKey("clientId"))
+                map["clientId"] = data.ClientId;
+            else
+                map.Add("clientId", data.ClientId);
             object obj = ServiceManager.Instance.GetService(data.ServiceName, intf);
 
             if (obj == null)

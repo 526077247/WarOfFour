@@ -37,12 +37,12 @@ namespace Service.SocketCore
             var Parameters = invocation.Method.GetParameters();
             for (int i = 0; i < Parameters.Length; i++)
             {
-                if (Parameters[i].Name == "tokens")
+                if (Parameters[i].Name == "clientIds")
                 {
                     tokens = invocation.Arguments[i] as List<string>;
                     continue;
                 }
-                if (Parameters[i].Name == "token")
+                if (Parameters[i].Name == "clientId")
                 {
                     tokens.Add(invocation.Arguments[i] as string);
                     continue;

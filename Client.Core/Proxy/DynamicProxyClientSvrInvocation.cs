@@ -24,6 +24,7 @@ namespace Client.Core
             socketDataObject.MethodName = invocation.Method.Name;
             socketDataObject.Paras = GetpstData(invocation);
             socketDataObject.Time = DateTime.Now.ToFormatString();
+            socketDataObject.Version = MainClient.version;
             MainClient.Instance.SendMsgToServer(socketDataObject);
 
             invocation.ReturnValue = null;

@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\MainClient.cs" />
+    <Compile Include="Domain\DataObject.cs" />
     <Compile Include="Domain\ShowAttribute.cs" />
     <Compile Include="Domain\SocketBaseService.cs" />
     <Compile Include="Domain\SocketDataObject.cs" />

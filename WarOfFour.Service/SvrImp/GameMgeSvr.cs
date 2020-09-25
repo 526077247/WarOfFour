@@ -35,6 +35,7 @@ namespace WarOfFour.Service
                         if(res.Players[i].UserId== userName)
                         {
                             res.Players[i].Token = token;
+                            return;
                         }
                     }
                 }
@@ -228,14 +229,16 @@ namespace WarOfFour.Service
         /// </summary>
         public void AddGame(List<string> tokens, Game game)
         {
-            Console.WriteLine("AddGame:" + Newtonsoft.Json.JsonConvert.SerializeObject(tokens));
+            
             foreach (var item in tokens)
             {
+                string userName = _AuthSvr.GetUserId(item);
+                _logger.Debug("AddGame:" + userName);
                 lock (userGameLock)
                 {
-                    if (!userGame.TryAdd(item, game))
+                    if (!userGame.TryAdd(userName, game))
                     {
-                        userGame[item] = game;
+                        userGame[userName] = game;
                     }
                 }
             }
@@ -255,7 +258,8 @@ namespace WarOfFour.Service
             games.Remove(game);
             foreach (var item in game.Tokens)
             {
-                userGame.TryRemove(item, out _);
+                string userName = _AuthSvr.GetUserId(item);
+                userGame.TryRemove(userName, out _);
             }
             _GameCallBack.GameOver(game.Tokens, game);
             _GameDao.Insert(game);

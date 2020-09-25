@@ -64,16 +64,6 @@ namespace WarOfFour.Service
 
         [JsonIgnore]
         Timer time;
-        [JsonIgnore]
-        private List<string> tokens;
-        [JsonIgnore]
-        private List<string> eastTokens;
-        [JsonIgnore]
-        private List<string> southTokens;
-        [JsonIgnore]
-        private List<string> westTokens;
-        [JsonIgnore]
-        private List<string> northTokens;
         /// <summary>
         /// 取当前对局玩家Token
         /// </summary>
@@ -82,6 +72,7 @@ namespace WarOfFour.Service
         {
             get
             {
+                List<string> tokens=null;
                 if (tokens == null)
                 {
                     tokens = new List<string>();
@@ -101,6 +92,7 @@ namespace WarOfFour.Service
         {
             get
             {
+                List<string> eastTokens = null;
                 if (eastTokens == null)
                 {
                     eastTokens = new List<string>();
@@ -120,6 +112,7 @@ namespace WarOfFour.Service
         {
             get
             {
+                List<string> southTokens = null;
                 if (southTokens == null)
                 {
                     southTokens = new List<string>();
@@ -139,6 +132,7 @@ namespace WarOfFour.Service
         {
             get
             {
+                List<string> westTokens = null;
                 if (westTokens == null)
                 {
                     westTokens = new List<string>();
@@ -158,6 +152,7 @@ namespace WarOfFour.Service
         {
             get
             {
+                List<string> northTokens = null;
                 if (northTokens == null)
                 {
                     northTokens = new List<string>();

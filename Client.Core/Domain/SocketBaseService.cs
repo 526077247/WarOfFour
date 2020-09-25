@@ -19,6 +19,7 @@ namespace Client.Core
             socketDataObject.MethodName = method;
             socketDataObject.Paras = para;
             socketDataObject.Time = DateTime.Now.ToFormatString();
+            socketDataObject.Version = MainClient.version;
             MainClient.Instance.SendMsgToServer(socketDataObject);
         }
        

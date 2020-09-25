@@ -60,13 +60,17 @@ namespace Service.SocketCore
                     {
                         msg.Add(bs[i]);
                     }
-                    byte[] real = StickyPackageHelper.decode(msg);
-                    if (real != null)
+                    byte[] real;
+                    do
                     {
-                        SocketDataObject obj = DataUtils.BytesToObject<SocketDataObject>(real);
-                        obj.ClientId = clientId;
-                        MainServer.Instance.AddHandleEvt(obj);
-                    }
+                        real = StickyPackageHelper.decode(msg);
+                        if (real != null)
+                        {
+                            SocketDataObject obj = DataUtils.BytesToObject<SocketDataObject>(real);
+                            obj.ClientId = clientId;
+                            MainServer.Instance.AddHandleEvt(obj);
+                        }
+                    } while (real != null);
                 }
             }
 

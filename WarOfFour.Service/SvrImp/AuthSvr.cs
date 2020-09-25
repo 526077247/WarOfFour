@@ -7,8 +7,8 @@ namespace WarOfFour.Service
     public delegate void ChangeUserToken(string userName, string newToken);
     public class AuthSvr : AppServiceBase, IAuthSvr
     {
-        ILoginMgeSvr LoginMgeSvr;
-        ILoginCallBack LoginCallBack;
+        ILoginMgeSvr _LoginMgeSvr;
+        ILoginCallBack _LoginCallBack;
         Dictionary<string, string> userToken;
         Dictionary<string, string> tokenUser;
         event ChangeUserToken changeUserTokenEvt;
@@ -16,31 +16,31 @@ namespace WarOfFour.Service
         {
             userToken = new Dictionary<string, string>();
             tokenUser = new Dictionary<string, string>();
-            LoginMgeSvr = ServiceManager.GetService<ILoginMgeSvr>("LoginMgeSvr");
-            LoginCallBack = ServiceManager.GetService<ILoginCallBack>("LoginCallBack");
+            _LoginMgeSvr = ServiceManager.GetService<ILoginMgeSvr>("LoginMgeSvr");
+            _LoginCallBack = ServiceManager.GetService<ILoginCallBack>("LoginCallBack");
             MainServer.Instance.LoginOutEvt = LoginOut;
         }
 
 
         public void LoginIn(string token, string userName, string psw)
         {
-            var res = LoginMgeSvr.Login(userName, psw);
+            var res = _LoginMgeSvr.Login(userName, psw);
             if (string.IsNullOrEmpty(res.Token))
             {
-                LoginCallBack.LoginFail(token, "用户名密码不匹配");
+                _LoginCallBack.LoginFail(token, "用户名密码不匹配");
             }
             else
             {
                 if (tokenUser.ContainsKey(token))
                 {
-                    LoginCallBack.LoginSuccess(token, token);
+                    _LoginCallBack.LoginSuccess(token, token);
                     return;
                 }
                 tokenUser.Add(token, userName);
                 changeUserTokenEvt?.Invoke(userName, token);
                 if (userToken.ContainsKey(userName))//若已存在
                 {
-                    LoginCallBack.CloseLink(userToken[userName], "账号在其他地方登陆");
+                    _LoginCallBack.CloseLink(userToken[userName], "账号在其他地方登陆");
                     if (userToken.ContainsKey(userName))//再次确认是否在线
                     {
                         tokenUser.Remove(userToken[userName]);
@@ -55,7 +55,7 @@ namespace WarOfFour.Service
                 {
                     userToken.Add(userName, token);
                 }
-                LoginCallBack.LoginSuccess(token, token);
+                _LoginCallBack.LoginSuccess(token, token);
             }
         }
 
@@ -82,7 +82,7 @@ namespace WarOfFour.Service
             {
                 return res;
             }
-            LoginCallBack.CloseLink(token, "与服务器断开连接");
+            _LoginCallBack.CloseLink(token, "与服务器断开连接");
             return null;
         }
         public string GetUserToken(string userName)

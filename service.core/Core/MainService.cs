@@ -72,15 +72,15 @@ namespace Service.SocketCore
         /// <summary>
         /// 发送信息到客户端
         /// </summary>
-        /// <param name="tokens"></param>
+        /// <param name="cliendIds"></param>
         /// <param name="obj"></param>
-        public void SendMsgToClient(List<string> tokens, SocketDataObject obj)
+        public void SendMsgToClient(List<string> cliendIds, SocketDataObject obj)
         {
-            if (tokens.Count > 0)
+            if (cliendIds.Count > 0)
             {
                 byte[] buffer = DataUtils.ObjectToBytes(obj);
                 byte[] bs = StickyPackageHelper.encode(buffer);
-                Parallel.ForEach(tokens, item =>
+                Parallel.ForEach(cliendIds, item =>
                 {
                     try
                     {
@@ -98,13 +98,13 @@ namespace Service.SocketCore
         /// <summary>
         /// 关闭客户端连接
         /// </summary>
-        /// <param name="token"></param>
+        /// <param name="cliendId"></param>
         /// <returns></returns>
-        public bool CloseConnect(string token)
+        public bool CloseConnect(string cliendId)
         {
-            if (cSockets.ContainsKey(token))
+            if (cSockets.ContainsKey(cliendId))
             {
-                cSockets[token].Close();
+                cSockets[cliendId].Close();
             }
             return true;
         }
@@ -114,10 +114,10 @@ namespace Service.SocketCore
         /// 移除客户端
         /// </summary>
         /// <param name="id"></param>
-        internal void CloseLink(string token)
+        internal void CloseLink(string cliendId)
         {
-            cSockets.Remove(token);
-            LoginOutEvt?.Invoke(token);
+            cSockets.Remove(cliendId);
+            LoginOutEvt?.Invoke(cliendId);
         }
 
         /// <summary>
@@ -209,29 +209,37 @@ namespace Service.SocketCore
         /// <param name="o"></param>
         private void InvokeHandle(object o)
         {
-            SocketDataObject data = o as SocketDataObject;
-            var path = Directory.GetCurrentDirectory() + "/wwwroot/" + data.ServiceName + ".json";
-            if (File.Exists(path))
+            try
             {
-                string jstr = File.ReadAllText(path);
-                ServiceDefine serviceDefine = new ServiceDefine
+                SocketDataObject data = o as SocketDataObject;
+                if (data == null) logger.Error(JsonConvert.SerializeObject(o));
+                var path = Directory.GetCurrentDirectory() + "/wwwroot/" + data.ServiceName + ".json";
+                if (File.Exists(path))
                 {
-                    JsonText = jstr
-                };
-                Type intf = ServiceManager.GetTypeFromAssembly(serviceDefine.IntfName, Assembly.Load(serviceDefine.IntfAssembly));
-                if (intf != null)
-                {
-                    GetServiceResult(data, intf, serviceDefine, data.MethodName);
+                    string jstr = File.ReadAllText(path);
+                    ServiceDefine serviceDefine = new ServiceDefine
+                    {
+                        JsonText = jstr
+                    };
+                    Type intf = ServiceManager.GetTypeFromAssembly(serviceDefine.IntfName, Assembly.Load(serviceDefine.IntfAssembly));
+                    if (intf != null)
+                    {
+                        GetServiceResult(data, intf, serviceDefine, data.MethodName);
+                    }
+                    else
+                    {
+                        logger.Error("接口未定义");
+                        throw new Exception("接口未定义");
+                    }
                 }
                 else
                 {
-                    logger.Error("接口未定义");
-                    throw new Exception("接口未定义");
+                    logger.Error("路径错误：" + path);
                 }
             }
-            else
+            catch(Exception ex)
             {
-                logger.Error("路径错误：" + path);
+                logger.Error(ex);
             }
         }
 
@@ -302,13 +310,17 @@ namespace Service.SocketCore
         private object GetServiceResult(SocketDataObject data, Type intf, ServiceDefine serviceDefine, string method)
         {
             Dictionary<string, string> map = GetQueryString(data.Paras);
-            if (!map.TryAdd("token", data.ClientId))
+            if (!map.TryAdd("clientId", data.ClientId))
             {
-                map["token"] = data.ClientId;
+                map["clientId"] = data.ClientId;
             }
             if (!map.TryAdd("actionTime", data.Time))
             {
                 map["actionTime"] = data.Time;
+            }
+            if (!map.TryAdd("version", data.Time))
+            {
+                map["version"] = data.Time;
             }
             object obj = ServiceManager.GetService(serviceDefine.SvrID, intf);
 
