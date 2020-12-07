@@ -8,7 +8,8 @@
     <Authors>mayuntao</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Product>MytSocketService</Product>
-    <Version>1.0.11</Version>
+    <Version>1.0.12</Version>
+    <AssemblyVersion>1.0.12.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>

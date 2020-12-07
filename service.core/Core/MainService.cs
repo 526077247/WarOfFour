@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -8,6 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,17 +19,20 @@ namespace Service.SocketCore
     {
         private static ILogger logger = LogManager.GetLog("System");
         private static MainServer instance;
-        private string ipStr;
+        private List<string> ipStr;
         private int port;
 
-        Socket acceptSocket;
+        Socket[] acceptSockets;
         public Action<string> LoginOutEvt;
-        Dictionary<string, ClientUser> cSockets;
+        internal ConcurrentDictionary<string, ClientUser> cSockets;
 
         Queue<SocketDataObject> handleEvts;
+
+        private ReciveService reciveService;
+        private BeatsCheckService beatsCheckService;
         private MainServer()
         {
-            cSockets = new Dictionary<string, ClientUser>();
+            cSockets = new ConcurrentDictionary<string, ClientUser>();
             handleEvts = new Queue<SocketDataObject>();
             ThreadPool.SetMaxThreads(2000, 2000);
         }
@@ -35,18 +40,28 @@ namespace Service.SocketCore
         {
             get
             {
+                if (instance == null) throw new Exception("未绑定端口");
                 return instance;
             }
         }
-        public static MainServer Build(string ip, int port)
+        public static MainServer Build(int port)
         {
             if (instance == null)
             {
                 instance = new MainServer
                 {
-                    ipStr = ip,
+                    ipStr = new List<string>(),
                     port = port
                 };
+                IPAddress[] ipAddress = Dns.GetHostAddresses(Dns.GetHostName());
+                foreach (var item in ipAddress)
+                {
+                    var ip = item.ToString();
+                    if (ifip(ip))
+                    {
+                        instance.ipStr.Add(ip);
+                    }    
+                }
             }
             return instance;
 
@@ -57,16 +72,21 @@ namespace Service.SocketCore
         /// <returns></returns>
         public void Start(int backlog = 1000)
         {
-            acceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            IPEndPoint point = new IPEndPoint(IPAddress.Parse(ipStr), port);
-            acceptSocket.Bind(point);
+            acceptSockets = new Socket[ipStr.Count];
+            for (int i = 0; i < ipStr.Count; i++)
+            {
+                var acceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IPEndPoint point = new IPEndPoint(IPAddress.Parse(ipStr[i]), port);
+                acceptSocket.Bind(point);
 
-            acceptSocket.Listen(backlog);
-            Console.WriteLine("Socket server start,listening " + ipStr + ":" + port);
-
-            ThreadPool.QueueUserWorkItem(StartListen, acceptSocket);
+                acceptSocket.Listen(backlog);
+                Console.WriteLine("Socket server start,listening " + ipStr[i] + ":" + port);
+                acceptSockets[i] = acceptSocket;
+                ThreadPool.QueueUserWorkItem(StartListen, acceptSocket);
+            }
             ThreadPool.QueueUserWorkItem(InvokeThread);
-
+            reciveService = new ReciveService(cSockets);
+            beatsCheckService= new BeatsCheckService(cSockets);
         }
 
         /// <summary>
@@ -88,7 +108,7 @@ namespace Service.SocketCore
                     }
                     catch
                     {
-                        cSockets.Remove(item);
+                        cSockets.Remove(item,out _);
                         LoginOutEvt?.Invoke(item);
                     }
                 });
@@ -116,7 +136,7 @@ namespace Service.SocketCore
         /// <param name="id"></param>
         internal void CloseLink(string cliendId)
         {
-            cSockets.Remove(cliendId);
+            cSockets.Remove(cliendId,out _);
             LoginOutEvt?.Invoke(cliendId);
         }
 
@@ -144,7 +164,7 @@ namespace Service.SocketCore
                 {
                     Socket clientSocket = serverSocket.Accept();
                     ClientUser linkSocket = new ClientUser(clientSocket);
-                    cSockets.Add(linkSocket.ClientId, linkSocket);
+                    cSockets.TryAdd(linkSocket.ClientId, linkSocket);
                 }
                 catch (Exception ex)
                 {
@@ -451,7 +471,24 @@ namespace Service.SocketCore
             return result;
 
         }
-
+        static bool ifip(string ip)
+        {
+            int num;
+            //分割成四段
+            string[] ip_4 = ip.Split('.');
+            if (ip_4.Length != 4) return false;
+            for (int i = 0; i < 4; i++)
+            {
+                if (!int.TryParse(ip_4[i], out num)) return false;
+                if (num < 0 && num > 255) return false;
+            }
+            //全部检查完毕 无错误 
+            return true;
+        }
+        static bool ifIp(string a)
+        {
+            return Regex.IsMatch(a, @"^((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)$");
+        }
         #endregion
 
     }

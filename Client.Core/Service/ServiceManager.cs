@@ -41,7 +41,7 @@ namespace Client.Core
             {
                 if (map[type].Count > 0)
                 {
-                    return map[type].Values.ToList()[0] as TService;
+                    return map[type].Values.ToList()[0] as TService;//不指名默认返回第一个
                 }
             }
             return null;

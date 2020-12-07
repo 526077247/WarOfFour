@@ -54,6 +54,7 @@
     <Compile Include="Domain\SocketBaseService.cs" />
     <Compile Include="Domain\SocketDataObject.cs" />
     <Compile Include="Helper\DataUtils.cs" />
+    <Compile Include="Helper\MD5Helper.cs" />
     <Compile Include="Helper\StickyPackageHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Proxy\DynamicProxyClientSvrInvocation.cs" />

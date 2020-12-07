@@ -19,11 +19,12 @@ namespace Service.SocketCore
         private List<byte> msg;
         public string Endpoint { get { if (clientSocket != null) return clientSocket.RemoteEndPoint.ToString();return "" ; } }
         public string ClientId { get { return clientId; } }
+        public Socket ClientSocket { get { return clientSocket; } }
         public ClientUser(Socket clientSocket)
         {
             this.clientSocket = clientSocket;
             msg = new List<byte>();
-            ThreadPool.QueueUserWorkItem(ReciveMsg, clientSocket);
+            //ThreadPool.QueueUserWorkItem(ReciveMsg, clientSocket);
             clientId = Guid.NewGuid().ToString();
         }
         public void Close()
@@ -35,45 +36,39 @@ namespace Service.SocketCore
             }
         }
 
-        public void ReciveMsg(object o)
+        public void ReciveMsg()
         {
-            Socket cSocket = o as Socket;
-            while (cSocket != null)
+            byte[] bs = new byte[5120];
+            int count;
+            try
             {
-                Thread.Sleep(1);
-                byte[] bs = new byte[5120];
-                int count;
-                try
-                {
-                    count = cSocket.Receive(bs);
-                }
-                catch (Exception ex)
-                {
-                    LogManager.GetLog("Client").Error("Client" + clientId + "Error:" + ex);
-                    Close();
-                    return;
-                }
-                if (count == 0) break;
-                else
-                {
-                    for (int i = 0; i < count; i++)
-                    {
-                        msg.Add(bs[i]);
-                    }
-                    byte[] real;
-                    do
-                    {
-                        real = StickyPackageHelper.decode(msg);
-                        if (real != null)
-                        {
-                            SocketDataObject obj = DataUtils.BytesToObject<SocketDataObject>(real);
-                            obj.ClientId = clientId;
-                            MainServer.Instance.AddHandleEvt(obj);
-                        }
-                    } while (real != null);
-                }
+                count = clientSocket.Receive(bs);
             }
-
+            catch (Exception ex)
+            {
+                LogManager.GetLog("Client").Error("Client" + clientId + "Error:" + ex);
+                Close();
+                return;
+            }
+            if (count == 0) return;
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    msg.Add(bs[i]);
+                }
+                byte[] real;
+                do
+                {
+                    real = StickyPackageHelper.decode(msg);
+                    if (real != null)
+                    {
+                        SocketDataObject obj = DataUtils.BytesToObject<SocketDataObject>(real);
+                        obj.ClientId = clientId;
+                        MainServer.Instance.AddHandleEvt(obj);
+                    }
+                } while (real != null);
+            }
         }
 
         /// <summary>
