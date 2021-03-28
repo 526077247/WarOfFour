@@ -27,16 +27,15 @@ namespace Service.SocketCore
             //ThreadPool.QueueUserWorkItem(ReciveMsg, clientSocket);
             clientId = Guid.NewGuid().ToString();
         }
-        public void Close()
+        internal void Close()
         {
             if (clientSocket != null)
             {
-                MainServer.Instance.CloseLink(ClientId);
                 clientSocket.Close();
             }
         }
 
-        public void ReciveMsg()
+        internal void ReciveMsg()
         {
             byte[] bs = new byte[5120];
             int count;
@@ -46,9 +45,8 @@ namespace Service.SocketCore
             }
             catch (Exception ex)
             {
-                LogManager.GetLog("Client").Error("Client" + clientId + "Error:" + ex);
-                Close();
-                return;
+                LogManager.GetLog("Client").Error("Client" + clientId + "Error:" + ex.ToString());
+                throw ex;
             }
             if (count == 0) return;
             else
@@ -76,7 +74,7 @@ namespace Service.SocketCore
         /// </summary>
         /// <param name="bs">要发送的信息</param>
         /// <returns>The number of bytes send to the socket</returns>
-        public int SendMsg(byte[] bs)
+        internal int SendMsg(byte[] bs)
         {
             try
             {
@@ -84,7 +82,7 @@ namespace Service.SocketCore
             }
             catch(Exception ex)
             {
-                Close();
+                LogManager.GetLog("Client").Error("Client" + clientId + "Error:" + ex.ToString());
                 throw ex;
             }
         }

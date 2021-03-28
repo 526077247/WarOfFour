@@ -27,7 +27,14 @@ namespace Service.SocketCore
                 var keys = cSockets.Keys.ToArray();
                 for (int i = 0; i < keys.Length; i++)
                 {
-                    cSockets[keys[i]].ReciveMsg();
+                    try
+                    {
+                        cSockets[keys[i]].ReciveMsg();
+                    }
+                    catch(Exception ex)
+                    {
+                        MainServer.Instance.RemoveClient(keys[i],out _);
+                    }
                 }
             }
         }

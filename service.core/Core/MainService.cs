@@ -72,21 +72,28 @@ namespace Service.SocketCore
         /// <returns></returns>
         public void Start(int backlog = 1000)
         {
-            acceptSockets = new Socket[ipStr.Count];
-            for (int i = 0; i < ipStr.Count; i++)
+            try
             {
-                var acceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IPEndPoint point = new IPEndPoint(IPAddress.Parse(ipStr[i]), port);
-                acceptSocket.Bind(point);
+                acceptSockets = new Socket[ipStr.Count];
+                reciveService = new ReciveService(cSockets);
+                beatsCheckService = new BeatsCheckService(cSockets);
+                ThreadPool.QueueUserWorkItem(InvokeThread);
+                for (int i = 0; i < ipStr.Count; i++)
+                {
+                    var acceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    IPEndPoint point = new IPEndPoint(IPAddress.Parse(ipStr[i]), port);
+                    acceptSocket.Bind(point);
 
-                acceptSocket.Listen(backlog);
-                Console.WriteLine("Socket server start,listening " + ipStr[i] + ":" + port);
-                acceptSockets[i] = acceptSocket;
-                ThreadPool.QueueUserWorkItem(StartListen, acceptSocket);
+                    acceptSocket.Listen(backlog);
+                    Console.WriteLine("Socket server start,listening " + ipStr[i] + ":" + port);
+                    acceptSockets[i] = acceptSocket;
+                    ThreadPool.QueueUserWorkItem(StartListen, acceptSocket);
+                }
             }
-            ThreadPool.QueueUserWorkItem(InvokeThread);
-            reciveService = new ReciveService(cSockets);
-            beatsCheckService= new BeatsCheckService(cSockets);
+            catch(Exception ex)
+            {
+                logger.Error(ex);
+            }
         }
 
         /// <summary>
@@ -106,26 +113,24 @@ namespace Service.SocketCore
                     {
                         cSockets[item].SendMsg(bs);
                     }
-                    catch
+                    catch(Exception ex)
                     {
-                        cSockets.Remove(item,out _);
-                        LoginOutEvt?.Invoke(item);
+                        Console.WriteLine(ex.ToString());
+                        RemoveClient(item,out _);
+                        logger.Error(ex);
                     }
                 });
             }
         }
 
         /// <summary>
-        /// 关闭客户端连接
+        /// 关闭连接
         /// </summary>
         /// <param name="cliendId"></param>
         /// <returns></returns>
         public bool CloseConnect(string cliendId)
         {
-            if (cSockets.ContainsKey(cliendId))
-            {
-                cSockets[cliendId].Close();
-            }
+            RemoveClient(cliendId, out _);
             return true;
         }
 
@@ -134,10 +139,17 @@ namespace Service.SocketCore
         /// 移除客户端
         /// </summary>
         /// <param name="id"></param>
-        internal void CloseLink(string cliendId)
+        internal void RemoveClient(string cliendId,out ClientUser item)
         {
-            cSockets.Remove(cliendId,out _);
+            if (cSockets.ContainsKey(cliendId))
+            {
+                cSockets[cliendId].Close();
+                logger.Info("Close Socket:" + cliendId);
+            }
+            cSockets.Remove(cliendId,out item);
             LoginOutEvt?.Invoke(cliendId);
+            logger.Info("RemoveClient cliendId:" + cliendId);
+            logger.Info("cSockets count:" + cSockets.Count);
         }
 
         /// <summary>
@@ -155,71 +167,66 @@ namespace Service.SocketCore
         /// <param name="o"></param>
         private void StartListen(object o)
         {
-            Socket serverSocket = o as Socket;
-            Console.WriteLine("StartListenThread Work");
-            while (true)
+            try
             {
-                Thread.Sleep(1);
-                try
+                Socket serverSocket = o as Socket;
+                Console.WriteLine("StartListenThread Work");
+                while (true)
                 {
-                    Socket clientSocket = serverSocket.Accept();
-                    ClientUser linkSocket = new ClientUser(clientSocket);
-                    cSockets.TryAdd(linkSocket.ClientId, linkSocket);
+                    Thread.Sleep(1);
+                    try
+                    {
+                        Socket clientSocket = serverSocket.Accept();
+                        ClientUser linkSocket = new ClientUser(clientSocket);
+                        cSockets.TryAdd(linkSocket.ClientId, linkSocket);
+                        logger.Info("cSockets count:" + cSockets.Count);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                        logger.Error(ex.ToString());
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                    logger.Error(ex.ToString());
-                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex.ToString());
             }
         }
 
-        private void CheckBeats(object o)
-        {
-            while (true)
-            {
-                Thread.Sleep(1);
-                try
-                {
-                    var vs = cSockets.Keys.ToList();
-                    for (int i = 0; i < vs.Count; i++)
-                    {
-                        SendMsgToClient(new List<string> { vs[i] }, new SocketDataObject());
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                }
-                Thread.Sleep(10000);
-            }
-        }
         /// <summary>
         /// 处理请求线程
         /// </summary>
         /// <param name="o"></param>
         private void InvokeThread(object o)
         {
-            Console.WriteLine("InvokeThread Work");
-            while (true)
+            try
             {
-                Thread.Sleep(1);
-                try
+                Console.WriteLine("InvokeThread Work");
+                while (true)
                 {
-                    if (handleEvts.Count > 0)
+                    Thread.Sleep(1);
+                    try
                     {
-                        ThreadPool.QueueUserWorkItem(InvokeHandle, handleEvts.Dequeue());
+                        if (handleEvts.Count > 0)
+                        {
+                            ThreadPool.QueueUserWorkItem(InvokeHandle, handleEvts.Dequeue());
+                        }
+                        else
+                        {
+                            Thread.Sleep(10);
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Thread.Sleep(10);
+                        Console.WriteLine(ex.ToString());
+                        logger.Error(ex.ToString());
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                    logger.Error(ex.ToString());
-                }
+            }
+            catch(Exception ex)
+            {
+                logger.Error(ex.ToString());
             }
         }
 
