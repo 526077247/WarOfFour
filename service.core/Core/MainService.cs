@@ -19,7 +19,7 @@ namespace Service.SocketCore
     {
         private static ILogger logger = LogManager.GetLog("System");
         private static MainServer instance;
-        private List<string> ipStr;
+        private List<IPAddress> ips;
         private int port;
 
         Socket[] acceptSockets;
@@ -44,24 +44,26 @@ namespace Service.SocketCore
                 return instance;
             }
         }
-        public static MainServer Build(int port)
+        public static MainServer Build(int port, IPAddress[] ipAddress= null)
         {
             if (instance == null)
             {
                 instance = new MainServer
                 {
-                    ipStr = new List<string>(),
+                    ips = new List<IPAddress>(),
                     port = port
                 };
-                IPAddress[] ipAddress = Dns.GetHostAddresses(Dns.GetHostName());
-                foreach (var item in ipAddress)
-                {
-                    var ip = item.ToString();
-                    if (ifip(ip))
+                if (ipAddress != null)
+                    foreach (var item in ipAddress)
                     {
-                        instance.ipStr.Add(ip);
-                    }    
-                }
+                        var ip = item.ToString();
+                        if (ifip(ip))
+                        {
+                            instance.ips.Add(item);
+                        }
+                    }
+                else
+                    instance.ips.Add(IPAddress.Any);
             }
             return instance;
 
@@ -74,18 +76,18 @@ namespace Service.SocketCore
         {
             try
             {
-                acceptSockets = new Socket[ipStr.Count];
+                acceptSockets = new Socket[ips.Count];
                 reciveService = new ReciveService(cSockets);
                 beatsCheckService = new BeatsCheckService(cSockets);
                 ThreadPool.QueueUserWorkItem(InvokeThread);
-                for (int i = 0; i < ipStr.Count; i++)
+                for (int i = 0; i < ips.Count; i++)
                 {
                     var acceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    IPEndPoint point = new IPEndPoint(IPAddress.Parse(ipStr[i]), port);
+                    IPEndPoint point = new IPEndPoint(ips[i], port);
                     acceptSocket.Bind(point);
 
                     acceptSocket.Listen(backlog);
-                    Console.WriteLine("Socket server start,listening " + ipStr[i] + ":" + port);
+                    Console.WriteLine("Socket server start,listening " + ips[i].ToString() + ":" + port);
                     acceptSockets[i] = acceptSocket;
                     ThreadPool.QueueUserWorkItem(StartListen, acceptSocket);
                 }
