@@ -28,8 +28,6 @@ namespace Service.SocketCore
 
         Queue<SocketDataObject> handleEvts;
 
-        private ReciveService reciveService;
-        private BeatsCheckService beatsCheckService;
         private MainServer()
         {
             cSockets = new ConcurrentDictionary<string, ClientUser>();
@@ -77,9 +75,6 @@ namespace Service.SocketCore
             try
             {
                 acceptSockets = new Socket[ips.Count];
-                reciveService = new ReciveService(cSockets);
-                beatsCheckService = new BeatsCheckService(cSockets);
-                ThreadPool.QueueUserWorkItem(InvokeThread);
                 for (int i = 0; i < ips.Count; i++)
                 {
                     var acceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -89,8 +84,10 @@ namespace Service.SocketCore
                     acceptSocket.Listen(backlog);
                     Console.WriteLine("Socket server start,listening " + ips[i].ToString() + ":" + port);
                     acceptSockets[i] = acceptSocket;
-                    ThreadPool.QueueUserWorkItem(StartListen, acceptSocket);
+                    StartListen(acceptSocket);
                 }
+
+                
             }
             catch(Exception ex)
             {
@@ -107,12 +104,14 @@ namespace Service.SocketCore
         {
             if (cliendIds.Count > 0)
             {
+               
                 byte[] buffer = DataUtils.ObjectToBytes(obj);
                 byte[] bs = StickyPackageHelper.encode(buffer);
                 Parallel.ForEach(cliendIds, item =>
                 {
                     try
                     {
+                        Console.WriteLine("SendMsgToClient:"+ item+" \n" + obj.ServiceName + "." + obj.MethodName + "?" + obj.Paras);
                         cSockets[item].SendMsg(bs);
                     }
                     catch(Exception ex)
@@ -162,81 +161,33 @@ namespace Service.SocketCore
         {
             handleEvts.Enqueue(obj);
         }
-
-        /// <summary>
-        /// 开始监听
-        /// </summary>
-        /// <param name="o"></param>
-        private void StartListen(object o)
+        private void StartListen(Socket acceptSocket)
         {
-            try
+            acceptSocket.BeginAccept(ar =>
             {
-                Socket serverSocket = o as Socket;
-                Console.WriteLine("StartListenThread Work");
-                while (true)
+                try
                 {
-                    Thread.Sleep(1);
-                    try
-                    {
-                        Socket clientSocket = serverSocket.Accept();
-                        ClientUser linkSocket = new ClientUser(clientSocket);
-                        cSockets.TryAdd(linkSocket.ClientId, linkSocket);
-                        logger.Info("cSockets count:" + cSockets.Count);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.ToString());
-                        logger.Error(ex.ToString());
-                    }
+                    Socket clientSocket = acceptSocket.EndAccept(ar);
+                    ClientUser linkSocket = new ClientUser(clientSocket);
+                    linkSocket.ReciveMsg();
+                    cSockets.TryAdd(linkSocket.ClientId, linkSocket);
+                    logger.Info("cSockets count:" + cSockets.Count);
                 }
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex.ToString());
-            }
-        }
-
-        /// <summary>
-        /// 处理请求线程
-        /// </summary>
-        /// <param name="o"></param>
-        private void InvokeThread(object o)
-        {
-            try
-            {
-                Console.WriteLine("InvokeThread Work");
-                while (true)
+                catch(Exception ex)
                 {
-                    Thread.Sleep(1);
-                    try
-                    {
-                        if (handleEvts.Count > 0)
-                        {
-                            ThreadPool.QueueUserWorkItem(InvokeHandle, handleEvts.Dequeue());
-                        }
-                        else
-                        {
-                            Thread.Sleep(10);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.ToString());
-                        logger.Error(ex.ToString());
-                    }
+                    Console.WriteLine(ex.ToString());
+                    logger.Error(ex.ToString());
                 }
-            }
-            catch(Exception ex)
-            {
-                logger.Error(ex.ToString());
-            }
+                //开始下一次监听
+                StartListen(acceptSocket);
+            }, null);
         }
-
+        
         /// <summary>
         /// 处理请求
         /// </summary>
         /// <param name="o"></param>
-        private void InvokeHandle(object o)
+        internal async Task InvokeHandle(object o)
         {
             try
             {
@@ -253,7 +204,10 @@ namespace Service.SocketCore
                     Type intf = ServiceManager.GetTypeFromAssembly(serviceDefine.IntfName, Assembly.Load(serviceDefine.IntfAssembly));
                     if (intf != null)
                     {
-                        GetServiceResult(data, intf, serviceDefine, data.MethodName);
+                        await Task.Run(() =>
+                        {
+                            GetServiceResult(data, intf, serviceDefine, data.MethodName);
+                        });   
                     }
                     else
                     {

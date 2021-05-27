@@ -24,7 +24,6 @@ namespace Service.SocketCore
         {
             this.clientSocket = clientSocket;
             msg = new List<byte>();
-            //ThreadPool.QueueUserWorkItem(ReciveMsg, clientSocket);
             clientId = Guid.NewGuid().ToString();
         }
         internal void Close()
@@ -38,35 +37,39 @@ namespace Service.SocketCore
         internal void ReciveMsg()
         {
             byte[] bs = new byte[5120];
-            int count;
-            try
+            clientSocket.BeginReceive(bs, 0, 5120, SocketFlags.None, ar =>
             {
-                count = clientSocket.Receive(bs);
-            }
-            catch (Exception ex)
-            {
-                LogManager.GetLog("Client").Error("Client" + clientId + "Error:" + ex.ToString());
-                throw ex;
-            }
-            if (count == 0) return;
-            else
-            {
-                for (int i = 0; i < count; i++)
+                try
                 {
-                    msg.Add(bs[i]);
-                }
-                byte[] real;
-                do
-                {
-                    real = StickyPackageHelper.decode(msg);
-                    if (real != null)
+                    int count = clientSocket.EndReceive(ar);
+                    if (count == 0) return;
+                    else
                     {
-                        SocketDataObject obj = DataUtils.BytesToObject<SocketDataObject>(real);
-                        obj.ClientId = clientId;
-                        MainServer.Instance.AddHandleEvt(obj);
+                        for (int i = 0; i < count; i++)
+                        {
+                            msg.Add(bs[i]);
+                        }
+                        byte[] real;
+                        do
+                        {
+                            real = StickyPackageHelper.decode(msg);
+                            if (real != null)
+                            {
+                                SocketDataObject obj = DataUtils.BytesToObject<SocketDataObject>(real);
+                                Console.WriteLine("ReciveMsgFromClient:" + clientId + " \n" + obj.ServiceName + "." + obj.MethodName + "?" + obj.Paras);
+                                obj.ClientId = clientId;
+                                MainServer.Instance.InvokeHandle(obj);
+                            }
+                        } while (real != null);
                     }
-                } while (real != null);
-            }
+                }
+                catch (Exception ex)
+                {
+                    LogManager.GetLog("Client").Error("Client" + clientId + "Error:" + ex.ToString());
+                    MainServer.Instance.RemoveClient(ClientId, out _);
+                }
+                ReciveMsg();
+            }, null);
         }
 
         /// <summary>
